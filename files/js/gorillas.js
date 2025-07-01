@@ -1,5 +1,8 @@
 //State of the game
 let state = {};
+let isDragging = false;
+let dragStartX = undefined;
+let dragStartY = undefined;
 
 //The main canvas element and its drawing context
 const canvas = document.getElementById("game");
@@ -13,6 +16,8 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 const ctx = canvas.getContext("2d");
 theLastbuilding = -2
+
+
 
 
 newGame();
@@ -398,4 +403,59 @@ function calculateScale()
 	const totalWidthOfTheCity = lastBuilding.x + lastBuilding.width;
 
 	state.scale = window.innerWidth / totalWidthOfTheCity;
+}
+
+bombGrabAreaDOM.addEventListener("mousedown", function(e)
+{
+	if (state.phase === "aiming")
+	{
+		isDragging = true;
+		dragStartX = e.clientX;
+		dragStartY = e.clientY;
+
+		document.body.style.cursor = "grabbing";
+	}
+});
+
+window.addEventListener("mousemove", function(e)
+{
+	if(isDragging)
+	{
+		let deltaX = e.clientX - dragStartX;
+		let deltaY = e.clientX - dragStartY;
+
+		state.bomb.velocity.x = -deltaX;
+		state.bomb.velocity.y = deltaY;
+		setInfo(deltaX, deltaY);
+		draw();
+	}
+});
+
+window.addEventListener("mouseup", function(e)
+{
+	if(isDragging)
+	{
+		isDragging = false;
+		document.body.style.cursor = "default";
+
+		throwBomb();
+	}
+});
+
+function setInfo(deltaX, deltaY)
+{
+	const hypotenuse = Math.sqrt(deltaX ** 2 + deltaY **2);
+	const angleInRadians = Math.asin(deltaY/hypotenuse);
+	const angleInDegrees = (angleInRadians/Math.PI) * 180;
+
+	if(state.currentPlayer === 1)
+	{
+		angle1DOM.innerText = Math.round(angleInDegrees);
+		velocity1DOM.innerText = Math.round(hypotenuse);
+	}
+	else
+	{
+		angle2DOM.innerText = Math.round(angleInDegrees);
+		velocity2DOM.innerText = Math.round(hypotenuse);
+	}
 }
